@@ -1,0 +1,47 @@
+version: '3'
+services:
+    proxy:
+        image: traefik
+        volumes:
+            - ./traefik.yaml:/etc/traefik/traefik.yaml
+            - ./conf/traefik:/etc/traefik/dynamic
+            - letsencrypt-acme:/letsencrypt
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        ports:
+            - 80:80
+            - 443:443
+            - 8080:8080
+        networks:
+            - proxy
+        restart: unless-stopped
+        container_name: proxy
+    adminer:
+        image: adminer
+        environment:
+            ADMINER_PLUGINS: tables-filter json-column table-indexes-structure
+        ports:
+          - 81:8080
+        networks:
+            - database
+        restart: unless-stopped
+        container_name: adminer
+    maildev:
+        image: dominikserafin/maildev
+        ports:
+            - 82:1080
+        networks:
+            - mail
+        restart: unless-stopped
+        container_name: maildev
+networks:
+    proxy:
+        driver: bridge
+        name: proxy
+    database:
+        driver: bridge
+        name: database
+    mail:
+        driver: bridge
+        name: mail
+volumes:
+    letsencrypt-acme:
